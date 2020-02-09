@@ -1,6 +1,7 @@
 import React from "react";
 import { Route } from "react-router-dom";
 
+// so that we don't have to change our code, we can alias the default export
 import { default as CollectionsOverview } from "../../components/collections-overview/collections-overview.container";
 import { default as CollectionPage } from "../collection/collection.container";
 
