@@ -12,6 +12,7 @@ import { store, persistor } from "./redux/store";
 
 import "./index.css";
 import App from "./App";
+import { resolvers, typeDefs } from "./graphql/resolvers";
 
 // connecting to the backend
 const httpLink = createHttpLink({
@@ -22,7 +23,15 @@ const cache = new InMemoryCache();
 
 const client = new ApolloClient({
   link: httpLink,
-  cache
+  cache,
+  typeDefs,
+  resolvers
+});
+
+client.writeData({
+  data: {
+    cartHidden: true
+  }
 });
 
 ReactDOM.render(
