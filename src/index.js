@@ -3,9 +3,12 @@ import ReactDOM from "react-dom";
 import { BrowserRouter } from "react-router-dom";
 import { Provider } from "react-redux";
 import { PersistGate } from "redux-persist/integration/react";
-import { ApolloProvider } from "react-apollo"; // like the providers in redux & context api. Accesses state in Apollo
-import { createHttpLink } from "apollo-link-http"; // connecting the client to the /graphql endpoint
-import { InMemoryCache } from "apollo-cache-inmemory"; // caches data to avoid multiple data requests
+// like the providers in redux & context api. Accesses state in Apollo
+import { ApolloProvider } from "react-apollo";
+// connecting the client to the /graphql endpoint
+import { createHttpLink } from "apollo-link-http";
+// caches data to avoid multiple data requests
+import { InMemoryCache } from "apollo-cache-inmemory";
 import { ApolloClient } from "apollo-boost";
 
 import { store, persistor } from "./redux/store";
@@ -21,6 +24,7 @@ const httpLink = createHttpLink({
 
 const cache = new InMemoryCache();
 
+// defining the client and properties
 const client = new ApolloClient({
   link: httpLink,
   cache,
@@ -28,9 +32,11 @@ const client = new ApolloClient({
   resolvers
 });
 
+// Setting initial states in client
 client.writeData({
   data: {
-    cartHidden: true
+    cartHidden: true,
+    cartItems: []
   }
 });
 
