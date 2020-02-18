@@ -6,7 +6,7 @@ import CartDropdown from "./cart-dropdown.component";
 
 const TOGGLE_CART_HIDDEN = gql`
   mutation ToggleCartHidden {
-    ToggleCartHidden @client
+    toggleCartHidden @client
   }
 `;
 
