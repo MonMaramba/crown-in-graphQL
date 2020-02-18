@@ -1,6 +1,6 @@
 // Resolvers are object that is passed to client that lets it know what properties to resolve depending on what queries or mutations are made from the local / client side
 import { gql } from "apollo-boost";
-import { addItemToCart } from "./cart.utils";
+import { addItemToCart, getCartItemCount } from "./cart.utils";
 
 // extend takes whatever is in the graphql server even if there is none
 export const typeDefs = gql`
@@ -26,6 +26,12 @@ const GET_CART_ITEMS = gql`
   }
 `;
 
+const GET_ITEM_COUNT = gql`
+  {
+    itemCount @client
+  }
+`;
+
 export const resolvers = {
   Mutation: {
     // params were meant to not be changed that's why they are prefixed with an underscore
@@ -47,6 +53,11 @@ export const resolvers = {
       });
 
       const newCartItems = addItemToCart(cartItems, item);
+
+      cache.writeQuery({
+        query: GET_ITEM_COUNT,
+        data: { itemCount: getCartItemCount(newCartItems) }
+      });
 
       cache.writeQuery({
         query: GET_CART_ITEMS,
