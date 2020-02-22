@@ -14,8 +14,9 @@ import { ApolloClient } from "apollo-boost";
 import { store, persistor } from "./redux/store";
 
 import "./index.css";
-import App from "./App";
+import { default as App } from "./App.container";
 import { resolvers, typeDefs } from "./graphql/resolvers";
+import { default as data } from "./graphql/initial-data";
 
 // connecting to the backend
 const httpLink = createHttpLink({
@@ -32,14 +33,16 @@ const client = new ApolloClient({
   resolvers
 });
 
+client.writeData({ data });
+
 // Setting initial states in client
-client.writeData({
-  data: {
-    cartHidden: true,
-    cartItems: [],
-    itemCount: 0
-  }
-});
+// client.writeData({
+//   data: {
+//     cartHidden: true,
+//     cartItems: [],
+//     itemCount: 0
+//   }
+// });
 
 ReactDOM.render(
   <ApolloProvider client={client}>
