@@ -1,6 +1,12 @@
 // Resolvers are object that is passed to client that lets it know what properties to resolve depending on what queries or mutations are made from the local / client side
 import { gql } from "apollo-boost";
-import { addItemToCart, getCartItemCount } from "./cart.utils";
+import {
+  addItemToCart,
+  removeItemFromCart,
+  getCartTotal,
+  clearItemFromCart,
+  getCartItemCount
+} from "./cart.utils";
 
 // extend takes whatever is in the graphql server even if there is none
 export const typeDefs = gql`
@@ -8,9 +14,24 @@ export const typeDefs = gql`
     quantity: Int
   }
 
+  extend type DateTime {
+    nanoseconds: Int!
+    seconds: Int!
+  }
+
+  extend type User {
+    id: ID!
+    displayName: String!
+    email: String!
+    createdAt: DateTime!
+  }
+
   extend type Mutation {
     ToggleCartHidden: Boolean!
     AddItemToCart(item: Item!): [Item]!
+    SetCurrentUser(user: User!): User!
+    RemoveItemFromCart(item: Item!): [Item]!
+    ClearItemFromCart(item: Item!): [Item]!
   }
 `;
 // # @client is a local directive that tells apollo client that the property cartHidden is in the cache
@@ -32,18 +53,47 @@ const GET_ITEM_COUNT = gql`
   }
 `;
 
+const GET_CART_TOTAL = gql`
+  {
+    cartTotal @client
+  }
+`;
+
+const GET_CURRENT_USER = gql`
+  {
+    currentUser @client
+  }
+`;
+
+const updateCartItemsRelatedQueries = (cache, newCartItems) => {
+  cache.writeQuery({
+    query: GET_ITEM_COUNT,
+    data: { itemCount: getCartItemCount(newCartItems) }
+  });
+
+  cache.writeQuery({
+    query: GET_CART_TOTAL,
+    data: { cartTotal: getCartTotal(newCartItems) }
+  });
+
+  cache.writeQuery({
+    query: GET_CART_ITEMS,
+    data: { cartItems: newCartItems }
+  });
+};
+
 export const resolvers = {
   Mutation: {
-    // params were meant to not be changed that's why they are prefixed with an underscore
-    // 3rd argument is _context which is the thing that the Apollo client has access to
     toggleCartHidden: (_root, _args, { cache }) => {
       const { cartHidden } = cache.readQuery({
         query: GET_CART_HIDDEN
       });
+
       cache.writeQuery({
         query: GET_CART_HIDDEN,
         data: { cartHidden: !cartHidden }
       });
+
       return !cartHidden;
     },
 
@@ -54,16 +104,42 @@ export const resolvers = {
 
       const newCartItems = addItemToCart(cartItems, item);
 
-      cache.writeQuery({
-        query: GET_ITEM_COUNT,
-        data: { itemCount: getCartItemCount(newCartItems) }
+      updateCartItemsRelatedQueries(cache, newCartItems);
+
+      return newCartItems;
+    },
+
+    removeItemFromCart: (_root, { item }, { cache }) => {
+      const { cartItems } = cache.readQuery({
+        query: GET_CART_ITEMS
       });
 
-      cache.writeQuery({
-        query: GET_CART_ITEMS,
-        data: { cartItems: newCartItems }
-      });
+      const newCartItems = removeItemFromCart(cartItems, item);
+
+      updateCartItemsRelatedQueries(cache, newCartItems);
+
       return newCartItems;
+    },
+
+    clearItemFromCart: (_root, { item }, { cache }) => {
+      const { cartItems } = cache.readQuery({
+        query: GET_CART_ITEMS
+      });
+
+      const newCartItems = clearItemFromCart(cartItems, item);
+
+      updateCartItemsRelatedQueries(cache, newCartItems);
+
+      return newCartItems;
+    },
+
+    setCurrentUser: (_root, { user }, { cache }) => {
+      cache.writeQuery({
+        query: GET_CURRENT_USER,
+        data: { currentUser: user }
+      });
+
+      return user;
     }
   }
 };
